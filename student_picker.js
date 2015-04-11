@@ -8,7 +8,7 @@
  * with each group being of the specified size.
  * 
  * Usage:
- * You can provide three different arguments:
+ * In any one call, you can provide one of three different arguments (but not more than one):
  * --call		This argument chooses one person for us to call upon.
  * --groups=n 	This argument determines the number of groups to create (where n is an integer)
  * --size=n		This argument determines the size of the groups (where n is an integer)
@@ -19,6 +19,27 @@
  * - If you use the --call argument, all other arguments will be ignored.
  */
 
+// Check to make sure only 1 argument was provided:
+if(process.argv.length !== 3) {
+	// More than 3 elements in argv array. Let the user know they have made a mistake in usage.
+	console.log("Error: Only 1 flag should be used at a time...");
+	console.log("Usage:");
+	console.log("student_picker.js --call");
+	console.log("student_picker.js --groups=n");
+	console.log("student_picker.js --size=n");
+	console.log("(Where n is an integer)");
+	process.exit();
+}
+
+var re = /^--(call|groups|size)\=([0-9]+)$/;
+var flag = re.exec(process.argv[2]);
+var options = {
+	action: flag[1],
+	value: flag[2]
+};
+
+// console.log(options);
+// process.exit();
 
 var students = [ 
 "Dennis Bishop", "Mark Blum", "James Bradley", "Kristina Chang", "Allxie Cleary", 
@@ -92,7 +113,7 @@ var generate_groups_of_size = function(students, groupSize) {
 
 		i++;
 	}
-	
+
 	return groups;
 }
 
@@ -101,10 +122,6 @@ var outputGroups = function(groups) {
 	var groupId = 1;
 	groups.forEach(function(group) {
 		console.log("\nGroup", groupId++);
-		// group.forEach(function(person) {
-		// 	console.log("Person:", person);
-		// 	console.log("type: ", person instanceof Array);
-		// })
 		console.log(group.join(", "));
 	})
 }
