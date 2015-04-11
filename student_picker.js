@@ -20,66 +20,25 @@
  */
 
 
-var students = [ "Dennis Bishop", "Mark Blum", "James Bradley", "Kristina Chang", "Allxie Cleary", "Darrell Cohn", "Jeff Ercolani", "Steven Gordon", "Rachel Harrigan", "Emily Hittle", "Jessica Lombera", "Heidi Kahkonen", "Catherine Kazbour", "John Michels", "Lyn Muldrow", "Andrew Patzsch", "Jane Philipps", "Annie Pennell", "Patrick Racenberg", "Cristina Reames", "Michael Reekers", "Chris Reeve", "Rasheed Romain", "Chhun So", "David Spencer", "Arati Sureddi", "Addison Tam", "Hing Tang", "Alex Trzeciak", "Monet Wilson" ];
-
-// Now we need to get the right values for "groups" and "size" (AKA size of each group)
-var args = {};
-var re;
-var groups;
-var size;
-process.argv.slice(2).forEach(function (arg) {
-	if (arg === "--call") {
-		args.call = true;
-		args.groups = 1;
-		args.groupSize = 1;
-	
-	} else {
-		args.call = false;
-	}
-
-	re = /^--groups\=([0-9]{1,})/;
-
-	if(groups = re.exec(arg)) { // look for a groups argument
-		args.groups = groups[1];
-	}
-
-	re = /^--size\=([0-9]{1,})/;
-
-	if(size = re.exec(arg)) { // look for a size argument
-		args.groupSize = size[1];
-	}
+var students = [ 
+"Dennis Bishop", "Mark Blum", "James Bradley", "Kristina Chang", "Allxie Cleary", 
+"Darrell Cohn", "Jeff Ercolani", "Steven Gordon", "Rachel Harrigan", "Emily Hittle", 
+"Jessica Lombera", "Heidi Kahkonen", "Catherine Kazbour", "John Michels", "Lyn Muldrow", 
+"Andrew Patzsch", "Jane Philipps", "Annie Pennell", "Patrick Racenberg", "Cristina Reames", 
+"Michael Reekers", "Chris Reeve", "Rasheed Romain", "Chhun So", "David Spencer", 
+"Arati Sureddi", "Addison Tam", "Hing Tang", "Alex Trzeciak", "Monet Wilson" ];
 
 
-});
-
-// Only one of the two arguments should be set, or the argument --call should be set
-if(!args.call) {
-	// We need to set some default values based on what has been passed
-	if (args.groupSize && !args.groups) {
-		args.groups = Math.ceil(students.length / args.groupSize);
-	} else if (args.groups && !args.groupSize) {
-		args.groupSize = Math.ceil(students.length / args.groups);
-	} else if (!args.groups && !args.groupSize) {
-		// if both are unset get them set with defaults, or if both are set, leave with settings
-		args.groupSize = args.groupSize || 2; // default to buddy grouping
-		args.groups = args.groups || Math.ceil(students.length / args.groupSize);
-	}
-} else {
-	var rand = Math.random();
-	var studentPick = Math.round(rand * (students.length-1));
-	console.log(students[studentPick]+", you're up!");
-	process.exit();
-}
-
-// Ok, we're done getting everything set up, now let's make some matches.
-
-
+// These are the functions we'll need
 
 var chooseGroups = function(arr) {
 
 	var result = [];
 	var chosen;
-	for (var i = 0; i < args.groups; i++) { // Loop will run one up to the number of groups we want to create
+	for (var i = 0; i < args.numGroups; i++) { // Loop will run one up to the number of groups we want to create
+		if(!arr.length) { // If we run out of elements in the array, just return early (happens when more than 15 groups are defined)
+			return result;
+		}
 
 		chosen = [];
 		for(var j = 0; j < args.groupSize; j++) {
@@ -96,20 +55,113 @@ var chooseGroups = function(arr) {
 
 }
 
+var generate_n_groups = function(students, numGroups) {
+	var groups = [];
+
+	while(students.length) {
+		for(var i = 0; i < numGroups; i++) {
+			groups[i] = groups[i] || [];
+
+			// We grab one person at a time from the array with splice and push element
+			// at index 0 into the groups array.
+			var random = Math.floor(Math.random() * students.length);
+			var student = students.splice(random, 1);
+			groups[i].push(student[0]);
+
+			if(!students.length) break; // If students array is empty, exit
+			// console.log("Students is:", students, "Student is:", student, "And i is:", i);
+		}
+	}
+
+	return groups;
+
+}
+
+var generate_groups_of_size = function(students, groupSize) {
+	var groups = [];
+	var i = 0;
+	while(students.length) {
+		groups[i] = [];
+		while(groups[i].length < groupSize) {
+			var random = Math.floor(Math.random() * students.length);
+			var student = students.splice(random, 1);
+			groups[i].push(student[0]);
+
+			if(!students.length) break; // If there are no more students, then break
+		}
+
+		i++;
+	}
+	
+	return groups;
+}
+
 
 var outputGroups = function(groups) {
 	var groupId = 1;
 	groups.forEach(function(group) {
-		console.log("\n\nGroup "+groupId+":\n");
-		group.forEach(function(person) {
-			console.log(person);
-		})
-		groupId++;
+		console.log("\nGroup", groupId++);
+		// group.forEach(function(person) {
+		// 	console.log("Person:", person);
+		// 	console.log("type: ", person instanceof Array);
+		// })
+		console.log(group.join(", "));
 	})
 }
 
+// Now we need to get the right values for "groups" and "size" (AKA size of each group)
+var args = {};
+var output, numGroups, groupSize;
+
+process.argv.slice(2).forEach(function (arg) {
+	if (arg === "--call") {
+		args.call = true;
+		args.numGroups = 1;
+		args.groupSize = 1;
+	} else {
+		args.call = false;
+	}
+
+	if(numGroups = /^--groups\=([0-9]{1,})/.exec(arg)) { // look for a groups argument
+		args.numGroups = numGroups[1];
+	}
+
+	if(groupSize = /^--size\=([0-9]{1,})/.exec(arg)) { // look for a size argument
+		args.groupSize = groupSize[1];
+	}
+
+
+});
+
+// Only one of the two arguments should be set, or the argument --call should be set
+if(!args.call) {
+	// We need to set some default values based on what has been passed
+	if (args.groupSize && !args.numGroups) {
+		outputGroups(generate_groups_of_size(students, args.groupSize));
+		// args.numGroups = Math.ceil(students.length / args.groupSize);
+	} else if (args.numGroups && !args.groupSize) {
+		outputGroups(generate_n_groups(students, args.numGroups));
+		process.exit();
+	} else if (!args.numGroups && !args.groupSize) {
+		// if both are unset get them set with defaults, or if both are set, leave with settings
+		args.groupSize = args.groupSize || 2; // default to buddy grouping
+		args.numGroups = args.numGroups || Math.ceil(students.length / args.groupSize);
+	}
+} else {
+	var rand = Math.random();
+	var studentPick = Math.round(rand * (students.length-1));
+	console.log(students[studentPick]+", you're up!");
+	process.exit();
+}
+
+// Ok, we're done getting everything set up, now let's make some matches.
+
+
 // Run the function to generate the groups and output them to screen
-outputGroups(chooseGroups(students));
+
+var output = output || chooseGroups(students)
+
+outputGroups(output);
 
 
 
